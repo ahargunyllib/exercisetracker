@@ -13,14 +13,38 @@ const userSchema = new mongoose.Schema({
     required: true
   }
 })
-
 userSchema.set("toJSON", {
   transform: (document, returnedObject) => {
 		delete returnedObject.__v;
 	}
 });
-
 let User = mongoose.model('user', userSchema)
+
+const exerciseSchema = new mongoose.Schema({
+  _id: {
+    type: String,
+    required: true
+  },
+  description: {
+    type: String,
+    required: true
+  },
+  duration: {
+    type: Number,
+    required: true
+  },
+  date: {
+    type: Date,
+    required: false
+  }
+})
+exerciseSchema.set("toJSON", {
+  transform: (document, returnedObject) => {
+		delete returnedObject.__v;
+	}
+});
+let Exercise = mongoose.model('exercise', exerciseSchema)
+
 
 app.use(cors())
 app.use(express.json());
@@ -39,6 +63,42 @@ app.post('/api/users', async (req, res) => {
   })
   await newUser.save();
   res.json(newUser)
+})
+
+app.get('/api/users', async (req, res) => {
+  const users = await User.find({})
+  let usersJson = []
+  users.forEach((u) => {
+    usersJson.push({
+      _id: u._id,
+      username: u.username
+    })
+  })
+  res.json(usersJson);
+})
+
+app.post('/api/users/:_id/exercises', async (req, res) => {
+  const _id = req.params._id
+  const description = req.body.description
+  const duration = Number(req.body.duration)
+  const date = req.body.date == '' ? new Date(Date.now()) : new Date(Date.parse(req.body.date))
+  const user = await User.findById(_id)
+
+  let newExercise = new Exercise({
+    _id: _id,
+    description: description,
+    duration: duration,
+    date: date,
+  })
+  await newExercise.save()
+
+  res.json({
+    username: user.username,
+    description: description,
+    duration: duration,
+    date: date.toDateString(),
+    _id: _id
+  })
 })
 
 const listener = app.listen(process.env.PORT || 3000, () => {
