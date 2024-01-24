@@ -101,6 +101,39 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   })
 })
 
+app.get("/api/users/:_id/logs", async (req, res) => {
+  const _id = req.params._id
+  const from = new Date(Date.parse(req.query.from))
+  const to = new Date(Date.parse(req.query.to))
+  const limit = req.query.limit
+  const user = await User.findById(_id)
+
+  let logs;
+  if (typeof(req.query.from) !== 'undefined') {
+    logs = await Exercise.find({ _id: _id , date: {$gte: from, $lte: to}})
+  } else {
+    logs = await Exercise.find({ _id: _id })
+  }
+
+  let logsJson = []
+  const count = (typeof(limit) !== 'undefined' ? limit : logs.length)
+  for (let i = 0; i < count; i++){
+    const l = {
+      description: logs[i].description,
+      duration: logs[i].duration,
+      date: logs[i].date.toDateString()
+    }
+    logsJson.push(l)
+  }
+
+  res.json({
+    username: user.username,
+    count: count,
+    _id: _id,
+    log: logsJson
+  })
+})
+
 const listener = app.listen(process.env.PORT || 3000, () => {
   console.log('Your app is listening on port ' + listener.address().port)
 })
