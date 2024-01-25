@@ -21,7 +21,7 @@ userSchema.set("toJSON", {
 let User = mongoose.model('user', userSchema)
 
 const exerciseSchema = new mongoose.Schema({
-  _id: {
+  userId: {
     type: String,
     required: true
   },
@@ -81,11 +81,11 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   const _id = req.params._id
   const description = req.body.description
   const duration = Number(req.body.duration)
-  const date = req.body.date == '' ? new Date(Date.now()) : new Date(Date.parse(req.body.date))
+  const date = typeof(req.body.date) === 'undefined' ? new Date(Date.now()) : new Date(Date.parse(req.body.date))
   const user = await User.findById(_id)
 
   let newExercise = new Exercise({
-    _id: _id,
+    userId: _id,
     description: description,
     duration: duration,
     date: date,
@@ -110,9 +110,9 @@ app.get("/api/users/:_id/logs", async (req, res) => {
 
   let logs;
   if (typeof(req.query.from) !== 'undefined') {
-    logs = await Exercise.find({ _id: _id , date: {$gte: from, $lte: to}})
+    logs = await Exercise.find({ userId: _id , date: {$gte: from, $lte: to}})
   } else {
-    logs = await Exercise.find({ _id: _id })
+    logs = await Exercise.find({ userId: _id })
   }
 
   let logsJson = []
